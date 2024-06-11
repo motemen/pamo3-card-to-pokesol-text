@@ -145,17 +145,25 @@ interface PokemonInfo {
 }
 
 const POKEMON_VARIANT_PAMO3_TO_POKESOL: Record<string, string | null> = {
-  れいじゅう: "霊獣",
-  けしん: "化身",
-  みどり: null,
-  かまど: "炎",
-  いど: "水",
-  いしずえ: "岩",
-  はくばじょう: "白馬",
-  こくばじょう: "黒馬",
-  アカツキ: "赫月",
-  れんげき: "連撃",
-  いちげき: "一撃",
+  "(れいじゅう)": "(霊獣)",
+  "(けしん)": "(化身)",
+  "(みどり)": "",
+  "(かまど)": "(炎)",
+  "(いど)": "(水)",
+  "(いしずえ)": "(岩)",
+  "(はくばじょう)": "(白馬)",
+  "(こくばじょう)": "(黒馬)",
+  "(アカツキ)": "(赫月)",
+  "(れんげき)": "(連撃)",
+  "(いちげき)": "(一撃)",
+
+  ヒートロトム: "ロトム(炎)",
+  ウォッシュロトム: "ロトム(水)",
+  フロストロトム: "ロトム(氷)",
+  スピンロトム: "ロトム(飛)",
+  カットロトム: "ロトム(草)",
+  "カバルドン(オス)": "カバルドン",
+  "カバルドン(メス)": "カバルドン",
 };
 
 function toPokesolText(pokemonInfo: PokemonInfo): string {
@@ -168,17 +176,11 @@ function toPokesolText(pokemonInfo: PokemonInfo): string {
     return actual;
   }).join("-");
 
-  const pokemonName = pokemonInfo.name.replace(
-    /\((.+)\)$/,
-    (_, variant): string => {
-      if (variant in POKEMON_VARIANT_PAMO3_TO_POKESOL) {
-        const pokesolVariant = POKEMON_VARIANT_PAMO3_TO_POKESOL[variant];
-        return pokesolVariant ? `(${pokesolVariant})` : "";
-      } else {
-        return `(${variant})`;
-      }
-    }
-  );
+  const pokemonName =
+    POKEMON_VARIANT_PAMO3_TO_POKESOL[pokemonInfo.name] ??
+    pokemonInfo.name.replace(/\(.+\)$/, (variant): string => {
+      return POKEMON_VARIANT_PAMO3_TO_POKESOL[variant] ?? variant;
+    });
 
   return [
     `${pokemonName} @ ${pokemonInfo.item ?? "ふめい"}`, // アイテム名は '[ぁ-んァ-ヶー]+' https://github.com/pokesoldev-group/pokesol-text-parser-ts/blob/80ac749def6a40ff13811fd4a0c09e382185a0da/src/grammar.peg#L15C26-L15C38
