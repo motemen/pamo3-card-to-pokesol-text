@@ -3,17 +3,43 @@ import Tesseract, { createWorker } from "tesseract.js";
 import cv from "@techstark/opencv-js";
 import terastalPNGPath from "../templates/terastal_mark.png";
 import debugTargetImage from "../sample_data/1717307435926-0zOki0ySSM.webp";
-import pokemon_names_ja from "../data/pokemon_names_ja.txt";
+import pokemon_names_ja from "../data/pokemon_names_ja.txt?raw";
 import move_names_ja from "../data/move_names_ja.txt";
+
+const POKEMON_NAMES_JA = pokemon_names_ja.trim().split("\n");
+
+function fixupPokemonName(name: string): string | null {
+  name = name.replace(/[^ぁ-んァ-ヶー\(\)]/g, "");
+  name = name.replace(/ー+$/, "ー");
+
+  if (POKEMON_NAMES_JA.includes(name)) {
+    return name;
+  }
+  name = name.replace(/ー$/, "");
+  if (POKEMON_NAMES_JA.includes(name)) {
+    return name;
+  }
+
+  console.log(`Unknown pokemon name: ${name}`);
+
+  return null;
+}
 
 const PAMO3_CARD_TEXT_RECTS: Record<
   string,
   { x: number; y: number; width: number; height: number }
 > = {
-  pokemon_name: {
+  pokemon_name2: {
     x: 0.1652,
     y: 0.1429,
     width: 0.5302,
+    height: 0.0714,
+  },
+  pokemon_name1: {
+    // 単タイプ
+    x: 0.1,
+    y: 0.1429,
+    width: 0.5954,
     height: 0.0714,
   },
   ability: {
@@ -248,18 +274,35 @@ function debugShowImage(image: cv.Mat, text?: string) {
 
 // 画像ファイルを選択したら読み込み、Tessaract.jsでOCRする
 
+const SECOND_TYPE_MARK_COORDS = {
+  x: 0.096,
+  y: 0.123,
+  width: 0.06,
+  height: 0.11,
+};
+
 async function findCircles(image: cv.Mat) {
   const thresholded = new cv.Mat();
 
   // 輪郭検出
 
-  cv.threshold(image, thresholded, 100, 255, cv.THRESH_BINARY);
-  cv.Canny(thresholded, thresholded, 50, 150);
-  // cv.cvtColor(thresholded, thresholded, cv.COLOR_RGBA2GRAY, 0);
+  cv.cvtColor(image, thresholded, cv.COLOR_RGBA2GRAY, cv.CV_8U);
+  // cv.threshold(thresholded, thresholded, 100, 255, cv.THRESH_BINARY);
   debugShowImage(thresholded, "thresholded");
 
+  /*
   const cc = new cv.Mat();
-  cv.HoughCircles(thresholded, cc, cv.HOUGH_GRADIENT, 1, 20, 100, 50, 0, 0);
+  cv.HoughCircles(
+    thresholded,
+    cc,
+    cv.HOUGH_GRADIENT,
+    1,
+    20,
+    100,
+    50,
+    0,
+    image.cols / 10
+  );
   console.log(cc);
 
   let dst = cv.Mat.zeros(thresholded.rows, thresholded.cols, cv.CV_8U);
@@ -270,9 +313,44 @@ async function findCircles(image: cv.Mat) {
     let radius = cc.data32F[i * 3 + 2];
     let center = new cv.Point(x, y);
     cv.circle(dst, center, radius, new cv.Scalar(255, 0, 0));
+    console.log(x, y, radius);
   }
 
   debugShowImage(dst, "circles");
+  */
+
+  // q: cv.Mat.roiでない方法で領域を切り出すには？
+  // a: cv.Mat.roiを使うか、cv.getRectSubPixを使うか
+
+  const roi = image.roi(new cv.Rect(0, 0, image.cols * 0.2, image.rows * 0.25));
+  const roit = new cv.Mat();
+  cv.threshold(roi, roit, 140, 255, cv.THRESH_BINARY);
+  cv.cvtColor(roit, roit, cv.COLOR_RGBA2GRAY, cv.CV_8U);
+  debugShowImage(roi, "roi");
+  const cc = new cv.Mat();
+
+  cv.HoughCircles(
+    roit,
+    cc,
+    cv.HOUGH_GRADIENT,
+    1,
+    10,
+    100,
+    50,
+    0,
+    image.cols / 10
+  );
+  console.log(cc.cols);
+
+  for (let i = 0; i < cc.cols; ++i) {
+    let x = cc.data32F[i * 3];
+    let y = cc.data32F[i * 3 + 1];
+    let radius = cc.data32F[i * 3 + 2];
+    let center = new cv.Point(x, y);
+    cv.circle(roit, center, radius, new cv.Scalar(255, 0, 0, 0), 2);
+    console.log(x, y, radius);
+  }
+  debugShowImage(roit, "circles2");
 }
 
 async function processImage(targetImage: cv.Mat) {
@@ -305,6 +383,7 @@ async function processImage(targetImage: cv.Mat) {
 
     const text = await doOCR(roi, { numberOnly: /^[HABCDS]/.test(name) });
     console.log(name, text);
+    // TODO: "ば ぱ ば" などのように濁点・半濁点で混乱している場合の対応
     result[name] = text.replace(/ /g, "").trim();
 
     cv.rectangle(
@@ -331,8 +410,11 @@ async function processImage(targetImage: cv.Mat) {
 
   console.log(result);
 
+  const pokemonName1 = fixupPokemonName(result["pokemon_name1"]);
+  const pokemonName2 = fixupPokemonName(result["pokemon_name2"]);
+
   const pokemonInfo: PokemonInfo = {
-    name: result["pokemon_name"],
+    name: pokemonName1 ?? pokemonName2,
     ability: result["ability"],
     nature: null as unknown as string,
     terastalType: null as unknown as string,
