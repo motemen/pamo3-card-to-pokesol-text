@@ -1,31 +1,11 @@
 import Tesseract, { createWorker } from "tesseract.js";
 import cv from "@techstark/opencv-js";
-import terastalPNGPath from "../templates/terastal_mark.png";
 import {
   squeezeTessaractResult,
   fixupPokemonName,
   PokemonInfo,
   toPokesolText,
 } from "./utils";
-
-function setProgress(percentage: number): void {
-  console.log(percentage);
-
-  return;
-
-  const progressBar = document.getElementById("progress")!;
-  if (!progressBar) return;
-  progressBar.style.width = `${percentage}%`;
-  if (percentage === 0) {
-    progressBar.classList.remove("opacity-0");
-    progressBar.classList.add("animate-pulse");
-  } else if (percentage >= 100) {
-    progressBar.classList.remove("animate-pulse");
-    setTimeout(() => {
-      progressBar.classList.add("opacity-0");
-    }, 500);
-  }
-}
 
 const PAMO3_CARD_TEXT_RECTS: Record<
   string,
@@ -148,45 +128,6 @@ const PAMO3_CARD_TEXT_RECTS: Record<
   },
 };
 
-function getContours(image: cv.Mat): [cv.MatVector, cv.Mat] {
-  const gray = new cv.Mat();
-  const blurred = new cv.Mat();
-  const edges = new cv.Mat();
-  const contours = new cv.MatVector();
-  const hierarchy = new cv.Mat();
-
-  // image[:, :, 3]
-  const mats = new cv.MatVector();
-  // cv.split(image, mats);
-  //cv.imshow("yo", mats.get(3));
-
-  cv.cvtColor(image, gray, cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
-  cv.Canny(blurred, edges, 50, 150);
-
-  cv.findContours(
-    gray,
-    contours,
-    hierarchy,
-    cv.RETR_CCOMP,
-    cv.CHAIN_APPROX_SIMPLE
-  );
-
-  // 輪郭を描く
-  for (let i = 0; i < contours.size(); i++) {
-    const color = new cv.Scalar(0, 255, 0, 0);
-    cv.drawContours(gray, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
-  }
-  debugShowImage(gray);
-  // cv.imshow("yo", gray);
-
-  gray.delete();
-  blurred.delete();
-  edges.delete();
-
-  return [contours, hierarchy];
-}
-
 function debugShowImage(image: cv.Mat, text?: string) {
   const canvas = document.createElement("canvas");
   cv.imshow(canvas, image);
@@ -201,80 +142,6 @@ function debugShowImage(image: cv.Mat, text?: string) {
     `
   );
   canvas.remove();
-}
-
-// 画像ファイルを選択したら読み込み、Tessaract.jsでOCRする
-
-async function findCircles(image: cv.Mat) {
-  const thresholded = new cv.Mat();
-
-  // 輪郭検出
-
-  cv.cvtColor(image, thresholded, cv.COLOR_RGBA2GRAY, cv.CV_8U);
-  // cv.threshold(thresholded, thresholded, 100, 255, cv.THRESH_BINARY);
-  debugShowImage(thresholded, "thresholded");
-
-  /*
-  const cc = new cv.Mat();
-  cv.HoughCircles(
-    thresholded,
-    cc,
-    cv.HOUGH_GRADIENT,
-    1,
-    20,
-    100,
-    50,
-    0,
-    image.cols / 10
-  );
-  console.log(cc);
-
-  let dst = cv.Mat.zeros(thresholded.rows, thresholded.cols, cv.CV_8U);
-
-  for (let i = 0; i < cc.cols; ++i) {
-    let x = cc.data32F[i * 3];
-    let y = cc.data32F[i * 3 + 1];
-    let radius = cc.data32F[i * 3 + 2];
-    let center = new cv.Point(x, y);
-    cv.circle(dst, center, radius, new cv.Scalar(255, 0, 0));
-    console.log(x, y, radius);
-  }
-
-  debugShowImage(dst, "circles");
-  */
-
-  // q: cv.Mat.roiでない方法で領域を切り出すには？
-  // a: cv.Mat.roiを使うか、cv.getRectSubPixを使うか
-
-  const roi = image.roi(new cv.Rect(0, 0, image.cols * 0.2, image.rows * 0.25));
-  const roit = new cv.Mat();
-  cv.threshold(roi, roit, 140, 255, cv.THRESH_BINARY);
-  cv.cvtColor(roit, roit, cv.COLOR_RGBA2GRAY, cv.CV_8U);
-  debugShowImage(roi, "roi");
-  const cc = new cv.Mat();
-
-  cv.HoughCircles(
-    roit,
-    cc,
-    cv.HOUGH_GRADIENT,
-    1,
-    10,
-    100,
-    50,
-    0,
-    image.cols / 10
-  );
-  console.log(cc.cols);
-
-  for (let i = 0; i < cc.cols; ++i) {
-    let x = cc.data32F[i * 3];
-    let y = cc.data32F[i * 3 + 1];
-    let radius = cc.data32F[i * 3 + 2];
-    let center = new cv.Point(x, y);
-    cv.circle(roit, center, radius, new cv.Scalar(255, 0, 0, 0), 2);
-    console.log(x, y, radius);
-  }
-  debugShowImage(roit, "circles2");
 }
 
 export async function readImageToPokesolText(

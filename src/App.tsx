@@ -25,6 +25,17 @@ const DropZone = ({
     onDropAccepted,
   });
 
+  const paste = useCallback(async () => {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      if (item.types.includes("image/png")) {
+        const blob = await item.getType("image/png");
+        onDropAccepted([blob as File], {} as any);
+        return;
+      }
+    }
+  }, []);
+
   return (
     <div
       className={clsx(
@@ -35,26 +46,19 @@ const DropZone = ({
           "border-red-500": isDragReject,
         }
       )}
-      contentEditable
-      onBeforeInputCapture={(ev) => {
-        ev.preventDefault();
-      }}
-      onCutCapture={(ev) => {
-        ev.preventDefault();
-      }}
-      onPasteCapture={(ev) => {
-        ev.preventDefault();
-        onDropAccepted(
-          [ev.clipboardData?.items[0].getAsFile()!],
-          ev as unknown as any
-        );
-      }}
     >
       <div {...getRootProps()}>
         {children}
         <input {...getInputProps()} />
         <p className="my-4">
-          ここにファイルをドロップ、貼り付け、
+          ここにファイルをドロップ、
+          <button
+            onClick={paste}
+            className="text-blue-500 hover:text-blue-400 active:text-blue-700 underline"
+          >
+            貼り付け
+          </button>
+          、
           <button
             onClick={open}
             className="text-blue-500 hover:text-blue-400 active:text-blue-700 underline"
@@ -115,8 +119,8 @@ export default function App() {
 
       <DropZone onDropAccepted={onDropFiles}>
         {imageURL && (
-          <div className="my-6">
-            <img src={imageURL} className="max-w-lg" />
+          <div className="my-6 p-2">
+            <img src={imageURL} className="max-w-full" />
           </div>
         )}
       </DropZone>
