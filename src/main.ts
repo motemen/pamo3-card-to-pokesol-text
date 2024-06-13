@@ -5,6 +5,7 @@ import terastalPNGPath from "../templates/terastal_mark.png";
 import debugTargetImage from "../sample_data/1717307435926-0zOki0ySSM.webp";
 import pokemon_names_ja from "../data/pokemon_names_ja.txt?raw";
 import move_names_ja from "../data/move_names_ja.txt";
+import { squeezeTessaractResult } from "./utils";
 
 const POKEMON_NAMES_JA = pokemon_names_ja.trim().split("\n");
 
@@ -384,7 +385,7 @@ async function processImage(targetImage: cv.Mat) {
     const text = await doOCR(roi, { numberOnly: /^[HABCDS]/.test(name) });
     console.log(name, text);
     // TODO: "ば ぱ ば" などのように濁点・半濁点で混乱している場合の対応
-    result[name] = text.replace(/ /g, "").trim();
+    result[name] = squeezeTessaractResult(text);
 
     cv.rectangle(
       wipImage,
