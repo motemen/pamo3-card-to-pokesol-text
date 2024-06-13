@@ -6,24 +6,10 @@
     <title>Pamo3 Card to Pokesol Text</title>
   </head>
   <body>
-    <div id="app" class="m-4 max-w-xl h-fit">
-      <div class="relative mb-5 overflow-hidden">
-        <pre
-          id="output"
-          class="border-2 border-slate-300 rounded p-2 w-full"
-          rows="6"
-          contenteditable=""
-        ><br><br><br><br><br><br></pre>
-        <div
-          id="progress"
-          class="bg-blue-300/60 absolute top-0 left-0 w-0 transition-all h-full animate-pulse pointer-events-none"
-        ></div>
-      </div>
-
-      <canvas id="canvas" class="max-w-lg"></canvas>
-      <br />
-      <input type="file" id="fileInput" />
+    <div class="m-8 max-w-xl h-fit">
+      <h1 class="text-xl font-bold mb-4">Pamo3 Card to Pokesol Text</h1>
+      <div id="root"></div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
