@@ -9,6 +9,20 @@ import { squeezeTessaractResult } from "./utils";
 
 const POKEMON_NAMES_JA = pokemon_names_ja.trim().split("\n");
 
+function setProgress(percentage: number): void {
+  const progressBar = document.getElementById("progress")!;
+  progressBar.style.width = `${percentage}%`;
+  if (percentage === 0) {
+    progressBar.classList.remove("opacity-0");
+    progressBar.classList.add("animate-pulse");
+  } else if (percentage >= 100) {
+    progressBar.classList.remove("animate-pulse");
+    setTimeout(() => {
+      progressBar.classList.add("opacity-0");
+    }, 500);
+  }
+}
+
 function fixupPokemonName(name: string): string | null {
   name = name.replace(/[^ぁ-んァ-ヶー\(\)]/g, "");
   name = name.replace(/ー+$/, "ー");
@@ -355,11 +369,15 @@ async function findCircles(image: cv.Mat) {
 }
 
 async function processImage(targetImage: cv.Mat) {
+  setProgress(0);
+  document.getElementById("output")!.textContent = "\n\n\n\n\n\n";
+
   cv.imshow("canvas", targetImage);
 
-  const [templateContours] = await loadStaticImage(terastalPNGPath).then(
-    getContours
-  );
+  const [templateContours] =
+    await loadStaticImage(terastalPNGPath).then(getContours);
+
+  setProgress(10);
 
   findCircles(targetImage);
 
@@ -368,6 +386,7 @@ async function processImage(targetImage: cv.Mat) {
 
   const result: Record<string, string> = {};
 
+  let progress = 10;
   // FIXME: pokemon_name は単タイプと複合タイプで位置が変わる
   for (const name of Object.keys(PAMO3_CARD_TEXT_RECTS)) {
     const { x, y, width, height } = PAMO3_CARD_TEXT_RECTS[name];
@@ -375,6 +394,9 @@ async function processImage(targetImage: cv.Mat) {
     const rectY = y * targetImage.rows;
     const rectWidth = width * targetImage.cols;
     const rectHeight = height * targetImage.rows;
+
+    progress += 5;
+    setProgress(progress);
 
     // 領域を切り取る
     const roi = targetImage.roi(
@@ -415,7 +437,7 @@ async function processImage(targetImage: cv.Mat) {
   const pokemonName2 = fixupPokemonName(result["pokemon_name2"]);
 
   const pokemonInfo: PokemonInfo = {
-    name: pokemonName1 ?? pokemonName2,
+    name: pokemonName1 ?? pokemonName2 ?? result["pokemon_name1"],
     ability: result["ability"],
     nature: null as unknown as string,
     terastalType: null as unknown as string,
@@ -445,6 +467,8 @@ async function processImage(targetImage: cv.Mat) {
   };
 
   document.getElementById("output")!.textContent = toPokesolText(pokemonInfo);
+
+  setProgress(100);
 
   return;
 
