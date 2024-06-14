@@ -140,3 +140,32 @@ export function loadFileAsDataURL(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+const BUFFS_TO_NATURE_JA: Record<string, string> = {
+  "A+B-": "さみしがり",
+  "A+C-": "いじっぱり",
+  "A+D-": "やんちゃ",
+  "A+S-": "ゆうかん",
+  "B+A-": "ずぶとい",
+  "B+C-": "わんぱく",
+  "B+D-": "のうてんき",
+  "B+S-": "のんき",
+  "C+A-": "ひかえめ",
+  "C+B-": "おっとり",
+  "C+D-": "うっかりや",
+  "C+S-": "れいせい",
+  "D+A-": "おだやか",
+  "D+B-": "おとなしい",
+  "D+C-": "しんちょう",
+  "D+S-": "なまいき",
+  "S+A-": "おくびょう",
+  "S+B-": "せっかち",
+  "S+C-": "ようき",
+  "S+D-": "むじゃき",
+};
+
+export function buffsToNature([upIndex, downIndex]: [number, number]): string {
+  const up = STATS_KEYS[upIndex + 1];
+  const down = STATS_KEYS[downIndex + 1];
+  return BUFFS_TO_NATURE_JA[`${up}+${down}-`] ?? "まじめ";
+}

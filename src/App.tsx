@@ -41,7 +41,7 @@ const DropZone = ({
       className={clsx(
         "w-full bg-gray-100 p-3 flex flex-col items-center border-2 border-gray-300 border-dotted",
         {
-          "border-gray-500": isFocused,
+          "border-slate-500": isFocused,
           "border-green-500": isDragAccept,
           "border-red-500": isDragReject,
         }

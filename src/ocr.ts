@@ -5,12 +5,17 @@ import {
   fixupPokemonName,
   PokemonInfo,
   toPokesolText,
+  buffsToNature,
 } from "./utils";
 
-const PAMO3_CARD_TEXT_RECTS: Record<
-  string,
-  { x: number; y: number; width: number; height: number }
-> = {
+interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const PAMO3_CARD_TEXT_RECTS: Record<string, Rect> = {
   pokemon_name2: {
     x: 0.1652,
     y: 0.1429,
@@ -128,7 +133,17 @@ const PAMO3_CARD_TEXT_RECTS: Record<
   },
 };
 
+const PAMO3_CARD_NATURE_MARKER_RECT: Rect = {
+  x: 0.636,
+  // y: 0.306,
+  y: 0.401,
+  width: 0.035,
+  // height: 0.57,
+  height: 0.47,
+};
+
 function debugShowImage(image: cv.Mat, text?: string) {
+  return;
   const canvas = document.createElement("canvas");
   cv.imshow(canvas, image);
   console.log(
@@ -157,7 +172,63 @@ export async function readImageToPokesolText(
   // copy targetImage
   const wipImage = targetImage.clone();
 
+  const natureMarker = targetImage.roi(
+    new cv.Rect(
+      PAMO3_CARD_NATURE_MARKER_RECT.x * targetImage.cols,
+      PAMO3_CARD_NATURE_MARKER_RECT.y * targetImage.rows,
+      PAMO3_CARD_NATURE_MARKER_RECT.width * targetImage.cols,
+      PAMO3_CARD_NATURE_MARKER_RECT.height * targetImage.rows
+    )
+  );
+  debugShowImage(natureMarker, "natureMarker");
+
+  const natureMarkerThreshold = new cv.Mat();
+  cv.cvtColor(natureMarker, natureMarkerThreshold, cv.COLOR_RGBA2RGB);
+  cv.threshold(
+    natureMarkerThreshold,
+    natureMarkerThreshold,
+    180,
+    255,
+    cv.THRESH_BINARY
+  );
+
+  debugShowImage(natureMarkerThreshold, "natureMarkerThreshold");
+
+  let natureBuffs: [number, number] = [-1, -1];
+  const buffRanges = [
+    [
+      [255, 0, 0],
+      [255, 255, 0],
+    ],
+    [
+      [0, 0, 255],
+      [0, 255, 255],
+    ],
+  ];
+  buffRanges.forEach(([lower, upper], i) => {
+    const mat = new cv.Mat();
+    cv.inRange(
+      natureMarkerThreshold,
+      cv.matFromArray(1, 3, cv.CV_8UC3, lower),
+      cv.matFromArray(1, 3, cv.CV_8UC3, upper),
+      mat
+    );
+    debugShowImage(mat, "mat");
+
+    for (let r = 0; r < mat.rows; r++) {
+      const row = mat.row(r);
+      if (row.data.some((v) => v !== 0)) {
+        natureBuffs[i] = Math.floor((r * 5) / mat.rows);
+        break;
+      }
+    }
+
+    mat.delete();
+  });
+
   const result: Record<string, string> = {};
+
+  result["nature"] = buffsToNature(natureBuffs);
 
   const progressDelta = 95 / Object.keys(PAMO3_CARD_TEXT_RECTS).length;
 
@@ -179,7 +250,6 @@ export async function readImageToPokesolText(
     debugShowImage(roi, name);
 
     const text = await doOCR(roi, { numberOnly: /^[HABCDS]/.test(name) });
-    console.log(name, text);
     result[name] = squeezeTessaractResult(text);
 
     cv.rectangle(
@@ -212,7 +282,7 @@ export async function readImageToPokesolText(
   const pokemonInfo: PokemonInfo = {
     name: pokemonName1 ?? pokemonName2 ?? result["pokemon_name1"],
     ability: result["ability"],
-    nature: null as unknown as string,
+    nature: result["nature"],
     terastalType: null as unknown as string,
     item: null as unknown as string,
     moves: [
@@ -268,8 +338,6 @@ async function doOCR(
   image: cv.Mat,
   options?: { numberOnly?: boolean }
 ): Promise<string> {
-  console.log("doOCR");
-
   const canvas = document.createElement("canvas");
 
   // 周囲に10pxの黒の余白を追加
