@@ -143,8 +143,8 @@ const PAMO3_CARD_NATURE_MARKER_RECT: Rect = {
 };
 
 function debugShowImage(image: cv.Mat, text?: string) {
-  return;
   const canvas = document.createElement("canvas");
+  return;
   cv.imshow(canvas, image);
   console.log(
     `%c${text ?? " "}`,
@@ -156,7 +156,8 @@ function debugShowImage(image: cv.Mat, text?: string) {
     background-repeat: no-repeat;
     `
   );
-  canvas.remove();
+  // canvas.remove();
+  document.body.appendChild(canvas);
 }
 
 export async function readImageToPokesolText(
