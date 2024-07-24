@@ -142,9 +142,32 @@ const PAMO3_CARD_NATURE_MARKER_RECT: Rect = {
   height: 0.47,
 };
 
+const PAMO3_CARD_TERASTAL_ICON_RECT: Rect = {
+  x: 0.905,
+  y: 0.11,
+  width: 0.06,
+  height: 0.125,
+};
+
+const TERASTAL_COLORS = {
+  フェアリー: [237, 163, 237],
+  どく: [183, 123, 215],
+  ノーマル: [189, 194, 197],
+  はがね: [150, 190, 204],
+  エスパー: [242, 134, 180],
+  みず: [90, 174, 251],
+  ひこう: [147, 197, 236],
+  じめん: [76, 62, 45],
+  こおり: [97, 212, 251],
+  ドラゴン: [49, 79, 136],
+  でんき: [248, 206, 56],
+  ほのお: [168, 73, 62],
+};
+
 function debugShowImage(image: cv.Mat, text?: string) {
-  const canvas = document.createElement("canvas");
   return;
+
+  const canvas = document.createElement("canvas");
   cv.imshow(canvas, image);
   console.log(
     `%c${text ?? " "}`,
@@ -162,7 +185,9 @@ function debugShowImage(image: cv.Mat, text?: string) {
 
 export async function readImageToPokesolText(
   imageURL: string,
-  { setProgress }: { setProgress: (percentage: number) => void }
+  { setProgress }: { setProgress: (percentage: number) => void } = {
+    setProgress: () => {},
+  }
 ): Promise<string> {
   let progress = 0;
 
@@ -172,6 +197,71 @@ export async function readImageToPokesolText(
 
   // copy targetImage
   const wipImage = targetImage.clone();
+
+  const terastalIcon = targetImage.roi(
+    new cv.Rect(
+      PAMO3_CARD_TERASTAL_ICON_RECT.x * targetImage.cols,
+      PAMO3_CARD_TERASTAL_ICON_RECT.y * targetImage.rows,
+      PAMO3_CARD_TERASTAL_ICON_RECT.width * targetImage.cols,
+      PAMO3_CARD_TERASTAL_ICON_RECT.height * targetImage.rows
+    )
+  );
+  debugShowImage(terastalIcon, "terastalIcon");
+
+  const pixels = new cv.Mat();
+  terastalIcon.convertTo(pixels, cv.CV_32F);
+
+  const samples = [];
+  for (let row = 0; row < pixels.rows; row++) {
+    for (let col = 0; col < pixels.cols; col++) {
+      const pixel = pixels.floatPtr(row, col);
+      samples.push([pixel[0], pixel[1], pixel[2]]);
+    }
+  }
+  const samplesMat = cv.matFromArray(
+    samples.length,
+    3,
+    cv.CV_32F,
+    samples.flat()
+  );
+
+  const K = 2;
+  const attemps = 10;
+  const labels = new cv.Mat();
+  const centers = new cv.Mat();
+  cv.kmeans(
+    samplesMat,
+    K,
+    labels,
+    new cv.TermCriteria(
+      cv.TermCriteria_EPS + cv.TermCriteria_MAX_ITER,
+      100,
+      0.1
+    ),
+    attemps,
+    2, // KMEANS_PP_CENTERS
+    centers
+  );
+
+  // 最も頻出するラベル（代表色）を見つける
+  let counts = new Array(K).fill(0);
+  for (let i = 0; i < labels.rows; i++) {
+    counts[labels.data32S[i]]++;
+  }
+
+  let dominantColorIndex = counts.indexOf(Math.max(...counts));
+  let dominantColor = {
+    r: Math.round(centers.data32F[dominantColorIndex * 3]),
+    g: Math.round(centers.data32F[dominantColorIndex * 3 + 1]),
+    b: Math.round(centers.data32F[dominantColorIndex * 3 + 2]),
+  };
+
+  console.log("代表色:", [dominantColor.r, dominantColor.g, dominantColor.b]);
+
+  console.log(
+    `%cテラス色`,
+    `background-color: rgb(${dominantColor.r}, ${dominantColor.g}, ${dominantColor.b}); color: white; padding: 0.5em;`
+  );
 
   const natureMarker = targetImage.roi(
     new cv.Rect(

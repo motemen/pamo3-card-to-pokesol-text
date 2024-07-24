@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { readImageToPokesolText } from "./ocr.ts";
 import { loadFileAsDataURL } from "./utils.ts";
-import debugTargetImage from "../sample_data/1717307435926-0zOki0ySSM.webp";
+import debugTargetImage from "../sample_data/01_ミライドン.webp";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
 import clsx from "clsx";
 
