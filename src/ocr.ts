@@ -7,6 +7,8 @@ import {
   toPokesolText,
   buffsToNature,
 } from "./utils";
+import all_move_names_txt from "./move_names.txt?raw";
+import all_abilities_txt from "./ability_names.txt?raw";
 
 interface Rect {
   x: number;
@@ -181,6 +183,160 @@ function debugShowImage(image: cv.Mat, text?: string) {
   );
   // canvas.remove();
   document.body.appendChild(canvas);
+}
+
+const all_move_names = all_move_names_txt.split("\n");
+export const all_abilities = all_abilities_txt.split("\n");
+
+export function fixupMoveName(moveName: string): string {
+  return fixupOCRText(moveName, all_move_names);
+}
+
+export function fixupAbility(ability: string): string {
+  return fixupOCRText(ability, all_abilities);
+}
+
+function fixupOCRText(text: string, candidates: string[]): string {
+  if (candidates.includes(text)) {
+    return text;
+  }
+
+  text = text.replace(/ー+$/, "ー");
+  if (candidates.includes(text)) {
+    return text;
+  }
+
+  text = text.replace(/ー$/, "");
+  if (candidates.includes(text)) {
+    return text;
+  }
+
+  return text;
+}
+
+export async function extractAndDrawSquareIcons(
+  src: cv.Mat,
+  logImage?: (image: cv.Mat) => Promise<void>
+) {
+  const dst = new cv.Mat();
+
+  // グレースケールに変換
+  cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+  // await logImage?.(dst);
+
+  // エッジ検出（Canny法）
+  cv.Canny(dst, dst, 100, 200, 3);
+  // await logImage?.(dst);
+
+  // モルフォロジー変換
+  const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+  cv.dilate(dst, dst, kernel);
+  // await logImage?.(dst);
+
+  // 輪郭を見つける
+  const contours = new cv.MatVector();
+  const hierarchy = new cv.Mat();
+  cv.findContours(
+    dst,
+    contours,
+    hierarchy,
+    cv.RETR_TREE,
+    cv.CHAIN_APPROX_SIMPLE
+  );
+
+  const squareIcons = [];
+
+  // 各輪郭をチェック
+  for (let i = 0; i < contours.size(); ++i) {
+    const cnt = contours.get(i);
+    const rect = cv.boundingRect(cnt);
+
+    // 正方形に近い形状かチェック（幅と高さの比率が0.9~1.1の範囲内）
+    if (
+      rect.width > src.rows / 15 &&
+      rect.height > src.rows / 15 && // 小さすぎる領域を除外
+      rect.x < src.cols / 10 &&
+      Math.abs(rect.width / rect.height - 1) < 0.05
+    ) {
+      // 輪郭を近似
+      const peri = cv.arcLength(cnt, true);
+      const approx = new cv.Mat();
+      cv.approxPolyDP(cnt, approx, 0.04 * peri, true);
+
+      // 近似後の頂点数が4つ（正方形）の場合
+      if (approx.rows == 4) {
+        squareIcons.push({
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+        });
+
+        // 正方形を描画
+        const color = new cv.Scalar(255, 0, 0, 255); // 赤色
+        const thickness = 2;
+        const point1 = new cv.Point(rect.x, rect.y);
+        const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+        cv.rectangle(src, point1, point2, color, thickness);
+      }
+      approx.delete();
+    }
+  }
+
+  // 描画結果を表示
+  await logImage?.(src);
+  // cv.imshow('canvasOutput', src);
+
+  // メモリ解放
+  dst.delete();
+  contours.delete();
+  hierarchy.delete();
+
+  return squareIcons;
+}
+
+export async function detectSquareEdges(image: cv.Mat) {
+  const src = image.clone();
+  const dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+  const lines = new cv.Mat();
+  const gray = new cv.Mat();
+  const edges = new cv.Mat();
+
+  // グレースケール変換
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+  // エッジ検出
+  cv.Canny(gray, edges, 50, 200, 3);
+
+  // 確率的ハフ変換で直線検出
+  cv.HoughLinesP(edges, lines, 1, Math.PI / 180, 50, 50, 10);
+
+  // 検出された直線を描画
+  for (let i = 0; i < lines.rows; ++i) {
+    let startPoint = new cv.Point(
+      lines.data32S[i * 4],
+      lines.data32S[i * 4 + 1]
+    );
+    let endPoint = new cv.Point(
+      lines.data32S[i * 4 + 2],
+      lines.data32S[i * 4 + 3]
+    );
+    cv.line(dst, startPoint, endPoint, [255, 0, 0, 255], 3);
+
+    // console.log(startPoint, endPoint);
+  }
+
+  // 結果を表示
+  // cv.imshow("canvasOutput", dst);
+
+  // メモリ解放
+  src.delete();
+  // dst.delete();
+  lines.delete();
+  gray.delete();
+  edges.delete();
+
+  return dst;
 }
 
 export async function readImageToPokesolText(
@@ -372,7 +528,7 @@ export async function readImageToPokesolText(
 
   const pokemonInfo: PokemonInfo = {
     name: pokemonName1 ?? pokemonName2 ?? result["pokemon_name1"],
-    ability: result["ability"],
+    ability: fixupAbility(result["ability"]),
     nature: result["nature"],
     terastalType: null as unknown as string,
     item: null as unknown as string,
@@ -381,7 +537,7 @@ export async function readImageToPokesolText(
       result["move_2"],
       result["move_3"],
       result["move_4"],
-    ],
+    ].map((moveName) => fixupMoveName(moveName)),
     actualValues: {
       H: parseInt(result["H"]),
       A: parseInt(result["A"]),
@@ -407,14 +563,13 @@ export async function readImageToPokesolText(
 
 const cv$ = new Promise<void>((resolve) => {
   cv.onRuntimeInitialized = () => {
-    console.log("onRuntimeInitialized");
     resolve();
   };
 });
 
 let _tessaractWorker: Tesseract.Worker | null = null;
 
-function loadImageFromURL(url: string): Promise<cv.Mat> {
+export function loadImageFromURL(url: string): Promise<cv.Mat> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = url;
