@@ -1,6 +1,11 @@
 import { test, expect } from "vitest";
 
-import { squeezeTessaractResult } from "./utils";
+import {
+  fixupAbility,
+  fixupMoveName,
+  fixupPokemonName,
+  squeezeTessaractResult,
+} from "./utils";
 
 test("squeezeTessaractResult", () => {
   [
@@ -11,4 +16,33 @@ test("squeezeTessaractResult", () => {
   ].forEach(([input, expected]) => {
     expect(squeezeTessaractResult(input)).toBe(expected);
   });
+});
+
+test("fixupPokemonName", async ({ expect }) => {
+  const tests = [["ヒートロトムニニーー", "ヒートロトム"]];
+
+  for (const [input, expected] of tests) {
+    expect(fixupPokemonName(input)).toBe(expected);
+  }
+});
+
+test("fixupMoveName", async ({ expect }) => {
+  const tests = [
+    ["しんそく", "しんそく"],
+    ["はねやすめ", "はねやすめ"],
+    ["アンコールー", "アンコール"],
+    ["シャドークローーー", "シャドークロー"],
+  ];
+
+  for (const [input, expected] of tests) {
+    expect(fixupMoveName(input)).toBe(expected);
+  }
+});
+
+test("fixupAbility", async ({ expect }) => {
+  const tests = [["サイコメイカー", "サイコメイカー"]];
+
+  for (const [input, expected] of tests) {
+    expect(fixupAbility(input)).toBe(expected);
+  }
 });

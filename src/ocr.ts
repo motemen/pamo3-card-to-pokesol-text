@@ -3,12 +3,12 @@ import cv from "@techstark/opencv-js";
 import {
   squeezeTessaractResult,
   fixupPokemonName,
+  fixupAbility,
+  fixupMoveName,
   PokemonInfo,
   toPokesolText,
   buffsToNature,
 } from "./utils";
-import all_move_names_txt from "./move_names.txt?raw";
-import all_abilities_txt from "./ability_names.txt?raw";
 
 interface Rect {
   x: number;
@@ -185,35 +185,6 @@ function debugShowImage(image: cv.Mat, text?: string) {
   document.body.appendChild(canvas);
 }
 
-const all_move_names = all_move_names_txt.split("\n");
-export const all_abilities = all_abilities_txt.split("\n");
-
-export function fixupMoveName(moveName: string): string {
-  return fixupOCRText(moveName, all_move_names);
-}
-
-export function fixupAbility(ability: string): string {
-  return fixupOCRText(ability, all_abilities);
-}
-
-function fixupOCRText(text: string, candidates: string[]): string {
-  if (candidates.includes(text)) {
-    return text;
-  }
-
-  text = text.replace(/ー+$/, "ー");
-  if (candidates.includes(text)) {
-    return text;
-  }
-
-  text = text.replace(/ー$/, "");
-  if (candidates.includes(text)) {
-    return text;
-  }
-
-  return text;
-}
-
 export async function extractAndDrawSquareIcons(
   src: cv.Mat,
   logImage?: (image: cv.Mat) => Promise<void>
@@ -282,6 +253,25 @@ export async function extractAndDrawSquareIcons(
       approx.delete();
     }
   }
+
+  // それはそれとして、性格マーカー検出領域も描画してみる
+  const natureMarkerRect = new cv.Rect(
+    PAMO3_CARD_NATURE_MARKER_RECT.x * src.cols,
+    PAMO3_CARD_NATURE_MARKER_RECT.y * src.rows,
+    PAMO3_CARD_NATURE_MARKER_RECT.width * src.cols,
+    PAMO3_CARD_NATURE_MARKER_RECT.height * src.rows
+  );
+  cv.rectangle(
+    src,
+    new cv.Point(natureMarkerRect.x, natureMarkerRect.y),
+    new cv.Point(
+      natureMarkerRect.x + natureMarkerRect.width,
+      natureMarkerRect.y + natureMarkerRect.height
+    ),
+    new cv.Scalar(0, 255, 0, 0),
+    2,
+    cv.LINE_AA
+  );
 
   // 描画結果を表示
   await logImage?.(src);

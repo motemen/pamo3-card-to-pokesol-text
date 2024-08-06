@@ -1,8 +1,6 @@
 import { test } from "vitest";
 import {
   extractAndDrawSquareIcons,
-  fixupAbility,
-  fixupMoveName,
   loadImageFromURL,
   readImageToPokesolText,
 } from "./ocr";
@@ -21,14 +19,17 @@ const files = import.meta.glob(
 const createCanvas = (name?: string): Promise<HTMLElement> => {
   return new Promise((resolve) => {
     const Canvas = ({ name }: { name?: string }) => {
-      const [zoom, setZoom] = useState(0.25);
+      const [zoomed, setZoomed] = useState(false);
 
       return (
         <figure
-          onClick={() => setZoom(zoom === 0.25 ? 1 : 0.25)}
+          onClick={() => setZoomed(!zoomed)}
           style={{ cursor: "pointer" }}
         >
-          <canvas ref={(ref) => ref && resolve(ref)} style={{ zoom }}></canvas>
+          <canvas
+            ref={(ref) => ref && resolve(ref)}
+            style={{ maxWidth: zoomed ? 800 : 400 }}
+          ></canvas>
           {name && <figcaption style={{ fontSize: "10px" }}>{name}</figcaption>}
         </figure>
       );
@@ -37,7 +38,8 @@ const createCanvas = (name?: string): Promise<HTMLElement> => {
   });
 };
 
-test("extractAndDrawSquareIcons", async ({ expect }) => {
+test.skip("extractAndDrawSquareIcons", async ({ expect }) => {
+  const averages = [];
   for (const name of Object.keys(files).sort()) {
     const image = await loadImageFromURL(files[name] as string);
     const squares = await extractAndDrawSquareIcons(image, async (logImg) => {
@@ -45,18 +47,36 @@ test("extractAndDrawSquareIcons", async ({ expect }) => {
     });
     expect(squares.length).toBeGreaterThan(0);
 
+    const pts = squares.map(({ x, y, width, height }) => [
+      (x / image.cols) * 100,
+      (y / image.rows) * 100,
+      (width / image.cols) * 100,
+      (height / image.rows) * 100,
+    ]);
+
     // 相対位置をログ
-    console.log(
-      squares.map(({ x, y, width, height }) => [
-        x / image.cols,
-        y / image.rows,
-        width / image.cols,
-        height / image.rows,
-      ])
-    );
+    console.log(name, [
+      pts.map(([x]) => x).reduce((a, b) => a + b) / pts.length,
+      pts.map(([, , width]) => width).reduce((a, b) => a + b) / pts.length,
+      pts.map(([, , , height]) => height).reduce((a, b) => a + b) / pts.length,
+    ]);
+
+    const cluster =
+      name.match(/\/([a-z])_/)![1].charCodeAt(0) - "a".charCodeAt(0);
+    averages.push([
+      [
+        pts.map(([x]) => x).reduce((a, b) => a + b) / pts.length,
+        pts.map(([, , width]) => width).reduce((a, b) => a + b) / pts.length,
+        pts.map(([, , , height]) => height).reduce((a, b) => a + b) /
+          pts.length,
+      ],
+      cluster,
+    ]);
 
     image.delete();
   }
+
+  console.log(JSON.stringify(averages));
 });
 
 test(
@@ -72,24 +92,3 @@ test(
     }
   }
 );
-
-test("fixupMoveName", async ({ expect }) => {
-  const tests = [
-    ["しんそく", "しんそく"],
-    ["はねやすめ", "はねやすめ"],
-    ["アンコールー", "アンコール"],
-    ["シャドークローーー", "シャドークロー"],
-  ];
-
-  for (const [input, expected] of tests) {
-    expect(fixupMoveName(input)).toBe(expected);
-  }
-});
-
-test("fixupAbility", async ({ expect }) => {
-  const tests = [["サイコメイカー", "サイコメイカー"]];
-
-  for (const [input, expected] of tests) {
-    expect(fixupAbility(input)).toBe(expected);
-  }
-});

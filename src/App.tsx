@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { readImageToPokesolText } from "./ocr.ts";
 import { loadFileAsDataURL } from "./utils.ts";
-import debugTargetImage from "../sample_data/01_ミライドン.webp";
 import { DropzoneOptions, useDropzone } from "react-dropzone";
 import clsx from "clsx";
 
@@ -85,13 +84,6 @@ export default function App() {
 
   useEffect(() => {
     return;
-    (async () => {
-      setImageURL(debugTargetImage);
-      const text = await readImageToPokesolText(debugTargetImage, {
-        setProgress,
-      });
-      setResult(text);
-    })();
   }, []);
 
   return (

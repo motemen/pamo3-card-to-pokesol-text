@@ -1,6 +1,10 @@
 import pokemon_names_ja from "../data/pokemon_names_ja.txt?raw";
+import all_move_names_txt from "./move_names.txt?raw";
+import all_abilities_txt from "./ability_names.txt?raw";
 
 export const POKEMON_NAMES_JA = pokemon_names_ja.trim().split("\n");
+const all_move_names = all_move_names_txt.trim().split("\n");
+const all_abilities = all_abilities_txt.trim().split("\n");
 
 // ぱ,ば など濁音半濁音のペア
 const DAKUON_HANDAKUON_PAIRS: Record<string, string> = {
@@ -45,21 +49,37 @@ export const squeezeTessaractResult = (text: string): string => {
     }, "");
 };
 export function fixupPokemonName(name: string): string | null {
-  name = name.replace(/[^ぁ-んァ-ヶー\(\)]/g, "");
-  name = name.replace(/ー+$/, "ー");
+  return fixupOCRText(name, POKEMON_NAMES_JA);
+}
 
-  if (POKEMON_NAMES_JA.includes(name)) {
-    return name;
-  }
-  name = name.replace(/ー$/, "");
-  if (POKEMON_NAMES_JA.includes(name)) {
-    return name;
+export function fixupMoveName(moveName: string): string {
+  return fixupOCRText(moveName, all_move_names);
+}
+
+export function fixupAbility(ability: string): string {
+  return fixupOCRText(ability, all_abilities);
+}
+
+function fixupOCRText(text: string, candidates: string[]): string | null {
+  if (candidates.includes(text)) {
+    return text;
   }
 
-  console.log(`Unknown pokemon name: ${name}`);
+  text = text.replace(/[^ぁ-んァ-ヶー\(\)]/g, "");
+  if (candidates.includes(text)) {
+    return text;
+  }
+
+  while (/[ニー]$/u.test(text)) {
+    text = text.replace(/[ニー]$/u, "");
+    if (candidates.includes(text)) {
+      return text;
+    }
+  }
 
   return null;
 }
+
 interface PokemonStats {
   H: number;
   A: number;
