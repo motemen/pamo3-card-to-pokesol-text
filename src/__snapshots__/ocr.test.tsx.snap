@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`readImageToPokesolText > 01_ミライドン.webp 1`] = `
+exports[`readImageToPokesolText > 01_ミライドン.webp 1`] = `
 "ミライドン @ ふめい
 テラスタイプ: 
 特性: ハドロンエンジン
@@ -18,7 +18,7 @@ exports[`readImageToPokesolText > 02_ウーラオス.webp 1`] = `
 すいりゅうれんだ / ドレインパンチ / れいとうパンチ / アクアジェット"
 `;
 
-exports[`readImageToPokesolText > 03_ディンルー.webp 1`] = `
+exports[`readImageToPokesolText > 03_ディンルー.webp 1`] = `
 "ディンルー @ ふめい
 テラスタイプ: 
 特性: わざわいのうつわ
@@ -27,7 +27,7 @@ exports[`readImageToPokesolText > 03_ディンルー.webp 1`] = `
 じしん / テラバースト / じならし / カタストロフィ"
 `;
 
-exports[`readImageToPokesolText > 04_アーマーガア.png 1`] = `
+exports[`readImageToPokesolText > 04_アーマーガア.png 1`] = `
 "アーマーガア @ ふめい
 テラスタイプ: 
 特性: ミラーアーマー
@@ -54,7 +54,7 @@ exports[`readImageToPokesolText > 06_ヒートロトム.png 1`] = `
 イカサマ / ボルトチェンジ / おにび / いたみわけ"
 `;
 
-exports[`readImageToPokesolText > 07_ブリムオン.png 1`] = `
+exports[`readImageToPokesolText > 07_ブリムオン.png 1`] = `
 "ブリムオン @ ふめい
 テラスタイプ: 
 特性: マジックミラー
@@ -72,7 +72,7 @@ exports[`readImageToPokesolText > 08_イエッサン.png 1`] = `
 ワイドフォース / マジカルシャイン / いやしのねがい / トリックルーム"
 `;
 
-exports[`readImageToPokesolText > 09_カバルドン.png 1`] = `
+exports[`readImageToPokesolText > 09_カバルドン.png 1`] = `
 "カバルドン @ ふめい
 テラスタイプ: 
 特性: すなおこし
@@ -81,7 +81,7 @@ exports[`readImageToPokesolText > 09_カバルドン.png 1`] = `
 じしん / あくび / ふきとばし / ステルスロック"
 `;
 
-exports[`readImageToPokesolText > 10_ゴチルゼル.png 1`] = `
+exports[`readImageToPokesolText > 10_ゴチルゼル.png 1`] = `
 "ゴチルゼル @ ふめい
 テラスタイプ: 
 特性: かげふぶふみ
@@ -99,7 +99,7 @@ exports[`readImageToPokesolText > 11_ヘイラッシャ.png 1`] = `
 ねむる / あくび / じしん / ウェーブタックル"
 `;
 
-exports[`readImageToPokesolText > 12_バドレックス.png 1`] = `
+exports[`readImageToPokesolText > 12_バドレックス.png 1`] = `
 "バドレックス(白馬) @ ふめい
 テラスタイプ: 
 特性: じんばいったい(はくば)
@@ -117,7 +117,7 @@ NaN-NaN-10-20(252)-144-5(2)
 るんえん / あくのはどう / オーバービヒート / テラバーズドトド"
 `;
 
-exports[`readImageToPokesolText > 14_パオジアン.png 1`] = `
+exports[`readImageToPokesolText > 14_パオジアン.png 1`] = `
 "用パナジラアァンー @ ふめい
 テラスタイプ: 
 特性: わざわいのつるぎ
@@ -126,7 +126,7 @@ exports[`readImageToPokesolText > 14_パオジアン.png 1`] = `
 つららおとし / かみくだく / テラバースト / ことのブフのウフて"
 `;
 
-exports[`readImageToPokesolText > 15_ザシアン.png 1`] = `
+exports[`readImageToPokesolText > 15_ザシアン.png 1`] = `
 "の生計講和生誠邊店知生生生生生症証 @ ふめい
 テラスタイプ: 
 特性: てレニエル
@@ -144,7 +144,7 @@ NaN-NaN-814(196)-15(4)-NaN-NaN
 パワーージェム / マッドショット / ステルスロック / つつズる"
 `;
 
-exports[`readImageToPokesolText > 17_パオジアン.png 1`] = `
+exports[`readImageToPokesolText > 17_パオジアン.png 1`] = `
 "パオジアン @ ふめい
 テラスタイプ: 
 特性: わざわいのつるぎ
@@ -153,7 +153,7 @@ exports[`readImageToPokesolText > 17_パオジアン.png 1`] = `
 つららおとし / テラバースト / ふいうち / みがわり"
 `;
 
-exports[`readImageToPokesolText > 18_オーロンゲ.png 1`] = `
+exports[`readImageToPokesolText > 18_オーロンゲ.png 1`] = `
 "オーロンゲニーー @ ふめい
 テラスタイプ: 
 特性: いたずらごころ
@@ -162,7 +162,7 @@ exports[`readImageToPokesolText > 18_オーロンゲ.png 1`] = `
 ソウルクラッシュ / でんじは / リフレクター / ひかりのかべ"
 `;
 
-exports[`readImageToPokesolText > 19_テツノワダチ.png 1`] = `
+exports[`readImageToPokesolText > 19_テツノワダチ.png 1`] = `
 "テツノワダチ @ ふめい
 テラスタイプ: 
 特性: クォークチャージ
@@ -180,7 +180,7 @@ exports[`readImageToPokesolText > 20_メタモン.png 1`] = `
 へんしん / わざを入力 / わざを入力 / わざを入力"
 `;
 
-exports[`readImageToPokesolText > 21_ハバタクカミ.png 1`] = `
+exports[`readImageToPokesolText > 21_ハバタクカミ.png 1`] = `
 "庄かハバタムクカミニーニー @ ふめい
 テラスタイプ: 
 特性: ーだいかっせい
@@ -189,7 +189,7 @@ NaN(228)-5-116(244)-156(4)-415(4)-NaN
 ムーンフォース / マジカルフレイム / ちょうはつ / いたみねもけ"
 `;
 
-exports[`readImageToPokesolText > 22_ディンルー.png 1`] = `
+exports[`readImageToPokesolText > 22_ディンルー.png 1`] = `
 "信デンソルー @ ふめい
 テラスタイプ: 
 特性: わざわいのうつわれ
@@ -198,7 +198,7 @@ NaN(2)-NaN(4)-176(116)-6-142(156)-NaN
 がんせきふうじ / カタストロフィニ / ステルスロック / ぶさとはじレ"
 `;
 
-exports[`readImageToPokesolText > 23_ハバタクカミ.webp 1`] = `
+exports[`readImageToPokesolText > 23_ハバタクカミ.webp 1`] = `
 "ハバタクカミニーニー @ ふめい
 テラスタイプ: 
 特性: こだいかっせい
@@ -207,7 +207,7 @@ exports[`readImageToPokesolText > 23_ハバタクカミ.webp 1`] = `
 ドレインキッス / シャドーボール・ / マジカルフレイム / めいそう"
 `;
 
-exports[`readImageToPokesolText > 24_コライドン.webp 1`] = `
+exports[`readImageToPokesolText > 24_コライドン.webp 1`] = `
 "コライドン @ ふめい
 テラスタイプ: 
 特性: ひひいろのこどう
@@ -216,7 +216,7 @@ exports[`readImageToPokesolText > 24_コライドン.webp 1`] = `
 フレアドライブ / インファイト / ニトロチャージ / とんぼがえり"
 `;
 
-exports[`readImageToPokesolText > 91_ミライドン_余白.webp 1`] = `
+exports[`readImageToPokesolText > 91_ミライドン_余白.webp 1`] = `
 "全ニニントー @ ふめい
 テラスタイプ: 
 特性: ロマソエマララソ
